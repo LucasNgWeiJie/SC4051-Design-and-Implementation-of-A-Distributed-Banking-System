@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math/rand"
 	"net"
 	"sync"
 	"time"
@@ -25,10 +24,9 @@ type Router struct {
 	cacheMu    sync.Mutex
 	monitors   map[string]time.Time
 	monitorsMu sync.Mutex
-	dropRate   float64
 }
 
-func NewRouter(repo *data.AccountRepository, dropRate float64) *Router {
+func NewRouter(repo *data.AccountRepository) *Router {
 	return &Router{
 		openAccSvc:  biz.NewOpenAccountService(repo),
 		closeAccSvc: biz.NewCloseAccountService(repo),
@@ -38,7 +36,6 @@ func NewRouter(repo *data.AccountRepository, dropRate float64) *Router {
 		monitorSvc:  biz.NewMonitorUpdatesService(repo),
 		cache:       make(map[string]map[uint32][]byte),
 		monitors:    make(map[string]time.Time),
-		dropRate:    dropRate,
 	}
 }
 
@@ -53,12 +50,12 @@ func (r *Router) BroadcastUpdate(msg string, conn *net.UDPConn) {
 	defer r.monitorsMu.Unlock()
 
 	now := time.Now()
-	
+
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.BigEndian, uint16(len(msg)))
 	buf.WriteString(msg)
 	msgBytes := buf.Bytes()
-	
+
 	headerBytes := make([]byte, 10)
 	binary.BigEndian.PutUint32(headerBytes[0:4], 0)
 	headerBytes[4] = common.OpCallbackUpdate
@@ -74,11 +71,7 @@ func (r *Router) BroadcastUpdate(msg string, conn *net.UDPConn) {
 		}
 		addr, err := net.ResolveUDPAddr("udp", addrStr)
 		if err == nil {
-			if r.dropRate > 0 && rand.Float64() < r.dropRate {
-				fmt.Printf("[Simulated Drop] Dropped callback update to %s\n", addrStr)
-			} else {
-				conn.WriteToUDP(fullUpdate, addr)
-			}
+			conn.WriteToUDP(fullUpdate, addr)
 		}
 	}
 }
@@ -98,20 +91,13 @@ func (r *Router) HandleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, reqDa
 
 	clientStr := clientAddr.String()
 
-	fmt.Printf("Received Request -- ID: %d, Opcode: %d, Semantics: %d, Client: %s\n", header.RequestID, header.Opcode, header.Semantics, clientStr)
-
 	if header.Semantics == common.SemAtMostOnce {
 		r.cacheMu.Lock()
 		if clientCache, ok := r.cache[clientStr]; ok {
 			if replyData, exists := clientCache[header.RequestID]; exists {
 				r.cacheMu.Unlock()
 				fmt.Printf("Duplicate request %d from %s\n", header.RequestID, clientStr)
-				if r.dropRate > 0 && rand.Float64() < r.dropRate {
-					fmt.Printf("[Simulated Drop] Dropped outgoing duplicate reply for Req ID %d to %s\n", header.RequestID, clientStr)
-				} else {
-					fmt.Printf("Sending Duplicate Reply -- ID: %d, Client: %s, Bytes: %d\n", header.RequestID, clientStr, len(replyData))
-					conn.WriteToUDP(replyData, clientAddr)
-				}
+				conn.WriteToUDP(replyData, clientAddr)
 				return
 			}
 		}
@@ -166,12 +152,7 @@ func (r *Router) HandleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, reqDa
 		r.cacheMu.Unlock()
 	}
 
-	if r.dropRate > 0 && rand.Float64() < r.dropRate {
-		fmt.Printf("[Simulated Drop] Dropped reply for Req ID %d Opcode: %d to %s\n", header.RequestID, replyOpcode, clientStr)
-	} else {
-		fmt.Printf("Sending Reply -- ID: %d, Opcode: %d, Client: %s, Bytes: %d\n", header.RequestID, replyOpcode, clientStr, len(fullReply))
-		conn.WriteToUDP(fullReply, clientAddr)
-	}
+	conn.WriteToUDP(fullReply, clientAddr)
 
 	if !isError && header.Opcode != common.OpCheckBalance && header.Opcode != common.OpMonitorUpdates {
 		r.BroadcastUpdate(fmt.Sprintf("Account update occurred. Opcode: %d", header.Opcode), conn)

@@ -3,13 +3,10 @@
 #include <iostream>
 #include <poll.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <time.h>
 
 UdpTransport::UdpTransport(const std::string &server_ip, int port,
-                           Semantics sem, float drop_rate)
-    : next_request_id(1), semantics(sem), timeout_ms(2000), drop_rate(drop_rate) {
-  srand(time(NULL));
+                           Semantics sem)
+    : next_request_id(1), semantics(sem), timeout_ms(2000) {
 
   // Create UDP Socket
   if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -33,12 +30,8 @@ bool UdpTransport::send_request(const std::vector<uint8_t> &request,
   // Attempt to send data and wait for response with a set number of max retries
   for (int retry = 0; retry < max_retries; ++retry) {
     // Send request array to the target server
-    if (drop_rate > 0 && (static_cast<float>(rand()) / RAND_MAX) < drop_rate) {
-      std::cout << "[Simulated Drop] Dropped outgoing request.\n";
-    } else {
-      sendto(sockfd, request.data(), request.size(), 0,
-             (const struct sockaddr *)&servaddr, sizeof(servaddr));
-    }
+    sendto(sockfd, request.data(), request.size(), 0,
+           (const struct sockaddr *)&servaddr, sizeof(servaddr));
 
     struct pollfd fd;
     fd.fd = sockfd;
@@ -52,10 +45,6 @@ bool UdpTransport::send_request(const std::vector<uint8_t> &request,
       // Receive bytes
       int n = recvfrom(sockfd, reply.data(), reply.size(), 0,
                        (struct sockaddr *)&servaddr, &len);
-      if (drop_rate > 0 && (static_cast<float>(rand()) / RAND_MAX) < drop_rate) {
-        std::cout << "[Simulated Drop] Dropped incoming reply.\n";
-        continue; // Act like poll timed out on this attempt
-      }
       reply.resize(n);
       return true;
     } else if (ret == 0) {
