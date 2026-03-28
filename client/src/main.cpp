@@ -14,6 +14,7 @@
 #include <iostream>
 #include <string>
 
+
 void print_menu() {
   std::cout << "\n=== Distributed Banking System ===\n";
   std::cout << "1. Open Account\n2. Close Account\n3. Deposit / Withdraw\n";

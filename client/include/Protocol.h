@@ -4,9 +4,23 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <arpa/inet.h>
 #include <cstring>
 #include <iostream>
+
+#ifdef _WIN32
+    // Windows sockets
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #pragma comment(lib, "Ws2_32.lib")  // link Winsock library
+#else
+    // Unix / macOS sockets
+    #include <arpa/inet.h>
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <unistd.h>
+#endif
+
+#endif // PROTOCOL_H
 
 enum Opcode : uint8_t {
     OP_OPEN_ACCOUNT = 1,
@@ -124,4 +138,3 @@ public:
     bool is_empty() const { return offset >= buffer.size(); }
 };
 
-#endif
