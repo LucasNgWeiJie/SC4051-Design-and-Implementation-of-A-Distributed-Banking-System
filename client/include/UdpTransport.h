@@ -2,9 +2,15 @@
 #define UDP_TRANSPORT_H
 
 #include "INetworkTransport.h"
-#include <netinet/in.h>
 #include <string>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <netinet/in.h>
 #include <sys/socket.h>
+#endif
 
 class UdpTransport : public INetworkTransport {
   int sockfd;

@@ -1,12 +1,31 @@
 #include "../include/UdpTransport.h"
-#include <arpa/inet.h>
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#define poll WSAPoll
+typedef int socklen_t;
+#else
+#include <arpa/inet.h>
 #include <poll.h>
 #include <unistd.h>
+#endif
 
 UdpTransport::UdpTransport(const std::string &server_ip, int port,
                            Semantics sem)
     : next_request_id(1), semantics(sem), timeout_ms(2000) {
+  srand(time(NULL));
+
+#ifdef _WIN32
+  WSADATA wsaData;
+  if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+      std::cerr << "WSAStartup failed\n";
+      exit(1);
+  }
+#endif
 
   // Create UDP Socket
   if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -21,7 +40,14 @@ UdpTransport::UdpTransport(const std::string &server_ip, int port,
   servaddr.sin_addr.s_addr = inet_addr(server_ip.c_str());
 }
 
-UdpTransport::~UdpTransport() { close(sockfd); }
+UdpTransport::~UdpTransport() { 
+#ifdef _WIN32
+  closesocket(sockfd);
+  WSACleanup();
+#else
+  close(sockfd); 
+#endif
+}
 
 bool UdpTransport::send_request(const std::vector<uint8_t> &request,
                                 std::vector<uint8_t> &reply) {

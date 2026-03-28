@@ -4,9 +4,16 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <arpa/inet.h>
+#include <vector>
 #include <cstring>
 #include <iostream>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#pragma comment(lib, "ws2_32.lib")
+#else
+#include <arpa/inet.h>
+#endif
 
 enum Opcode : uint8_t {
     OP_OPEN_ACCOUNT = 1,
