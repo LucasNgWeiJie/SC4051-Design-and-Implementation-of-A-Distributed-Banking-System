@@ -1,0 +1,26 @@
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: Interval (seconds): Successfully registered for updates for 5 seconds.
+[UPDATE]: Account update occurred. Opcode: 1
+[UPDATE]: Account update occurred. Opcode: 3
+[UPDATE]: Account update occurred. Opcode: 1
+[UPDATE]: Account update occurred. Opcode: 5
+[UPDATE]: Account update occurred. Opcode: 2
+Monitoring interval expired.
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: 

@@ -1,0 +1,70 @@
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: Name: Password: Currency (1=SGD, 2=USD, 3=EUR): Initial Balance: Account created successfully. Account Number: 1000
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: Name: Account Number: Password: Account Balance: 500
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: Name: Account Number: Password: Currency (1=SGD, 2=USD, 3=EUR): Amount: Transaction successful. New Balance: 750
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: Name: Password: Currency (1=SGD, 2=USD, 3=EUR): Initial Balance: Account created successfully. Account Number: 1001
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: Name: Source Account: Password: Dest Account: Amount: Transfer successful. Source New Balance: 550
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: Name: Account Number: Password: Account closed successfully.
+
+=== Distributed Banking System ===
+1. Open Account
+2. Close Account
+3. Deposit / Withdraw
+4. Check Balance
+5. Transfer
+6. Monitor Updates
+0. Exit
+Choice: 

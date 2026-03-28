@@ -1,0 +1,12 @@
+# Build folders & binaries
+client_app
+bank_server
+build/
+*.o
+*.out
+*.exe
+
+# Python
+.DS_Store
+__pycache__/
+*.py[cod]
