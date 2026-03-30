@@ -56,7 +56,7 @@ bool UdpTransport::send_request(const std::vector<uint8_t> &request,
   // Attempt to send data and wait for response with a set number of max retries
   for (int retry = 0; retry < max_retries; ++retry) {
     // Send request array to the target server
-    sendto(sockfd, request.data(), request.size(), 0,
+    sendto(sockfd, reinterpret_cast<const char*>(request.data()), request.size(), 0,
            (const struct sockaddr *)&servaddr, sizeof(servaddr));
 
     struct pollfd fd;
@@ -69,7 +69,7 @@ bool UdpTransport::send_request(const std::vector<uint8_t> &request,
       reply.resize(4096);
       socklen_t len = sizeof(servaddr);
       // Receive bytes
-      int n = recvfrom(sockfd, reply.data(), reply.size(), 0,
+      int n = recvfrom(sockfd, reinterpret_cast<char*>(reply.data()), reply.size(), 0,
                        (struct sockaddr *)&servaddr, &len);
       reply.resize(n);
 
@@ -100,7 +100,7 @@ bool UdpTransport::wait_for_message(std::vector<uint8_t> &msg, int timeout_ms) {
   int ret = poll(&fd, 1, timeout_ms);
   if (ret > 0) {
     msg.resize(4096);
-    int n = recvfrom(sockfd, msg.data(), msg.size(), 0, NULL, NULL);
+    int n = recvfrom(sockfd, reinterpret_cast<char*>(msg.data()), msg.size(), 0, NULL, NULL);
     msg.resize(n);
     return true;
   }
