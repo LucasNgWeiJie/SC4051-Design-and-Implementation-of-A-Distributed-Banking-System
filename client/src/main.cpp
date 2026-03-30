@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 
   // Bind transport using arguments provided
   UdpTransport transport(argv[1], std::stoi(argv[2]),
-                         static_cast<Semantics>(std::stoi(argv[3])));
+                         static_cast<Semantics>(std::stoi(argv[3])), drop_rate);
 
   // Initialize required services
   Service1_OpenAccountControl c1(&transport);

@@ -18,9 +18,10 @@ class UdpTransport : public INetworkTransport {
   uint32_t next_request_id;
   Semantics semantics;
   int timeout_ms;
+  float drop_rate;
 
 public:
-  UdpTransport(const std::string &server_ip, int port, Semantics sem);
+  UdpTransport(const std::string &server_ip, int port, Semantics sem, float drop_rate = 0.0f);
   ~UdpTransport();
 
   bool send_request(const std::vector<uint8_t> &request,

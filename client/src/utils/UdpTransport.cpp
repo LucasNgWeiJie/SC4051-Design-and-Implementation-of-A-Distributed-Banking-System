@@ -15,8 +15,8 @@ typedef int socklen_t;
 #endif
 
 UdpTransport::UdpTransport(const std::string &server_ip, int port,
-                           Semantics sem)
-    : next_request_id(1), semantics(sem), timeout_ms(2000) {
+                           Semantics sem, float drop_rate)
+    : next_request_id(1), semantics(sem), timeout_ms(2000), drop_rate(drop_rate) {
   srand(time(NULL));
 
 #ifdef _WIN32
@@ -72,6 +72,13 @@ bool UdpTransport::send_request(const std::vector<uint8_t> &request,
       int n = recvfrom(sockfd, reply.data(), reply.size(), 0,
                        (struct sockaddr *)&servaddr, &len);
       reply.resize(n);
+
+      // Simulate reply drop
+      if (drop_rate > 0.0f && (static_cast<float>(rand()) / RAND_MAX) < drop_rate) {
+          std::cout << "[Simulated Drop] Dropped received reply, retrying...\n";
+          continue; // Treat as timeout, retry
+      }
+
       return true;
     } else if (ret == 0) {
       std::cout << "Timeout, retrying (" << retry + 1 << "/" << max_retries
