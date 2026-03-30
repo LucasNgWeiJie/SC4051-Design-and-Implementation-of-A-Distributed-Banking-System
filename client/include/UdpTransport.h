@@ -3,15 +3,13 @@
 
 #include "INetworkTransport.h"
 #include <string>
-#include <vector>
+
 #ifdef _WIN32
-  #include <winsock2.h>
-  #include <ws2tcpip.h>
-  #pragma comment(lib, "ws2_32.lib") // link Winsock
-  using socklen_t = int;             // Windows uses int instead of socklen_t
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #else
-  #include <netinet/in.h>
-  #include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
 class UdpTransport : public INetworkTransport {

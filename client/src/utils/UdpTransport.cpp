@@ -1,77 +1,83 @@
 #include "../include/UdpTransport.h"
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
+
+#ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
-
-#pragma comment(lib, "Ws2_32.lib")
+#define poll WSAPoll
+typedef int socklen_t;
+#else
+#include <arpa/inet.h>
+#include <poll.h>
+#include <unistd.h>
+#endif
 
 UdpTransport::UdpTransport(const std::string &server_ip, int port,
                            Semantics sem)
     : next_request_id(1), semantics(sem), timeout_ms(2000) {
+  srand(time(NULL));
 
-  // Initialize Winsock
+#ifdef _WIN32
   WSADATA wsaData;
   if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-    std::cerr << "WSAStartup failed\n";
+      std::cerr << "WSAStartup failed\n";
+      exit(1);
+  }
+#endif
+
+  // Create UDP Socket
+  if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    std::cerr << "Socket creation failed\n";
     exit(1);
   }
 
-  // Create UDP socket
-  sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sockfd == INVALID_SOCKET) {
-    std::cerr << "Socket creation failed: " << WSAGetLastError() << "\n";
-    WSACleanup();
-    exit(1);
-  }
-
-  // Server address
+  // server address logic
   memset(&servaddr, 0, sizeof(servaddr));
   servaddr.sin_family = AF_INET;
   servaddr.sin_port = htons(port);
-  inet_pton(AF_INET, server_ip.c_str(), &servaddr.sin_addr);
+  servaddr.sin_addr.s_addr = inet_addr(server_ip.c_str());
 }
 
-UdpTransport::~UdpTransport() {
+UdpTransport::~UdpTransport() { 
+#ifdef _WIN32
   closesocket(sockfd);
   WSACleanup();
+#else
+  close(sockfd); 
+#endif
 }
 
 bool UdpTransport::send_request(const std::vector<uint8_t> &request,
                                 std::vector<uint8_t> &reply) {
   int max_retries = 3;
 
+  // Attempt to send data and wait for response with a set number of max retries
   for (int retry = 0; retry < max_retries; ++retry) {
-    sendto(sockfd, reinterpret_cast<const char *>(request.data()),
-           static_cast<int>(request.size()), 0,
+    // Send request array to the target server
+    sendto(sockfd, request.data(), request.size(), 0,
            (const struct sockaddr *)&servaddr, sizeof(servaddr));
 
-    // Use select instead of poll for Windows compatibility
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(sockfd, &readfds);
+    struct pollfd fd;
+    fd.fd = sockfd;
+    fd.events = POLLIN;
 
-    struct timeval tv;
-    tv.tv_sec = timeout_ms / 1000;
-    tv.tv_usec = (timeout_ms % 1000) * 1000;
-
-    int ret = select(0, &readfds, NULL, NULL, &tv);
+    // Wait and check if the poll times out
+    int ret = poll(&fd, 1, timeout_ms);
     if (ret > 0) {
       reply.resize(4096);
-      int len = sizeof(servaddr);
-      int n = recvfrom(sockfd, reinterpret_cast<char *>(reply.data()),
-                       static_cast<int>(reply.size()), 0,
+      socklen_t len = sizeof(servaddr);
+      // Receive bytes
+      int n = recvfrom(sockfd, reply.data(), reply.size(), 0,
                        (struct sockaddr *)&servaddr, &len);
-      if (n == SOCKET_ERROR) {
-        std::cerr << "recvfrom failed: " << WSAGetLastError() << "\n";
-        return false;
-      }
       reply.resize(n);
       return true;
     } else if (ret == 0) {
       std::cout << "Timeout, retrying (" << retry + 1 << "/" << max_retries
                 << ")...\n";
     } else {
-      std::cerr << "select error: " << WSAGetLastError() << "\n";
+      std::cerr << "Poll error\n";
       return false;
     }
   }
@@ -80,20 +86,14 @@ bool UdpTransport::send_request(const std::vector<uint8_t> &request,
 }
 
 bool UdpTransport::wait_for_message(std::vector<uint8_t> &msg, int timeout_ms) {
-  fd_set readfds;
-  FD_ZERO(&readfds);
-  FD_SET(sockfd, &readfds);
+  struct pollfd fd;
+  fd.fd = sockfd;
+  fd.events = POLLIN;
 
-  struct timeval tv;
-  tv.tv_sec = timeout_ms / 1000;
-  tv.tv_usec = (timeout_ms % 1000) * 1000;
-
-  int ret = select(0, &readfds, NULL, NULL, &tv);
+  int ret = poll(&fd, 1, timeout_ms);
   if (ret > 0) {
     msg.resize(4096);
-    int n = recvfrom(sockfd, reinterpret_cast<char *>(msg.data()),
-                     static_cast<int>(msg.size()), 0, NULL, NULL);
-    if (n == SOCKET_ERROR) return false;
+    int n = recvfrom(sockfd, msg.data(), msg.size(), 0, NULL, NULL);
     msg.resize(n);
     return true;
   }
