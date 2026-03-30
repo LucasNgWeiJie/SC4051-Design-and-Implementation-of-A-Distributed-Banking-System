@@ -3,12 +3,18 @@ project(DistributedBankingClient CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 
 include_directories(include)
 
-file(GLOB_RECURSE SRC_FILES 
-    "src/*.cpp"
-)
+file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 
 add_executable(client_app ${SRC_FILES})
+
+# Compiler-specific warning flags
+if(MSVC)
+    # MSVC: /W4 is good default
+    target_compile_options(client_app PRIVATE /W4)
+else()
+    # GCC/Clang
+    target_compile_options(client_app PRIVATE -Wall -Wextra)
+endif()

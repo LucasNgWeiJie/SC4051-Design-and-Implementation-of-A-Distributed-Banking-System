@@ -23,10 +23,10 @@ func main() {
 
 	// Initialize the storage repository (in-memory sync maps)
 	repo := data.NewAccountRepository()
-	
+
 	// Set up the routing multiplexer for business logic services
-	router := api.NewRouter(repo, dropRate)
-	
+	router := api.NewRouter(repo)
+
 	// Initialize the networking listener daemon
 	server := api.NewUDPServer(port, router, dropRate)
 
