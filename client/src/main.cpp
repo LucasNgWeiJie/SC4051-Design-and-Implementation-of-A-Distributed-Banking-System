@@ -14,17 +14,19 @@
 #include <iostream>
 #include <string>
 
-
-void print_menu() {
+void print_menu()
+{
   std::cout << "\n=== Distributed Banking System ===\n";
   std::cout << "1. Open Account\n2. Close Account\n3. Deposit / Withdraw\n";
   std::cout
       << "4. Check Balance\n5. Transfer\n6. Monitor Updates\n0. Exit\nChoice: ";
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   // Check if configuration arguments were provided
-  if (argc < 4) {
+  if (argc < 4)
+  {
     std::cout << "Usage: " << argv[0]
               << " <server_ip> <port> <semantics: 0=AtLeastOnce, 1=AtMostOnce> "
                  "[drop_rate]\n";
@@ -32,13 +34,14 @@ int main(int argc, char *argv[]) {
   }
 
   float drop_rate = 0.0f;
-  if (argc >= 5) {
+  if (argc >= 5)
+  {
     drop_rate = std::stof(argv[4]);
   }
 
   // Bind transport using arguments provided
   UdpTransport transport(argv[1], std::stoi(argv[2]),
-                         static_cast<Semantics>(std::stoi(argv[3])));
+                         static_cast<Semantics>(std::stoi(argv[3])), drop_rate);
 
   // Initialize required services
   Service1_OpenAccountControl c1(&transport);
@@ -55,11 +58,13 @@ int main(int argc, char *argv[]) {
   Service6_MonitorUpdatesBoundary b6(&c6);
 
   int choice;
-  while (true) {
+  while (true)
+  {
     print_menu();
     if (!(std::cin >> choice))
       break;
-    switch (choice) {
+    switch (choice)
+    {
     case 1:
       b1.execute();
       break;

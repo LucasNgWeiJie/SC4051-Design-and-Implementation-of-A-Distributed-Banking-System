@@ -5,24 +5,26 @@
 #include <string>
 #include <vector>
 #ifdef _WIN32
-  #include <winsock2.h>
-  #include <ws2tcpip.h>
-  #pragma comment(lib, "ws2_32.lib") // link Winsock
-  using socklen_t = int;             // Windows uses int instead of socklen_t
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib") // link Winsock
+using socklen_t = int;             // Windows uses int instead of socklen_t
 #else
-  #include <netinet/in.h>
-  #include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
-class UdpTransport : public INetworkTransport {
+class UdpTransport : public INetworkTransport
+{
   int sockfd;
   struct sockaddr_in servaddr;
   uint32_t next_request_id;
   Semantics semantics;
   int timeout_ms;
+  float drop_rate;
 
 public:
-  UdpTransport(const std::string &server_ip, int port, Semantics sem);
+  UdpTransport(const std::string &server_ip, int port, Semantics sem, float drop_rate = 0.0f);
   ~UdpTransport();
 
   bool send_request(const std::vector<uint8_t> &request,
