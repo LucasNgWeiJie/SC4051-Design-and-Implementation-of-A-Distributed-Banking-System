@@ -25,7 +25,7 @@ func main() {
 	repo := data.NewAccountRepository()
 
 	// Set up the routing multiplexer for business logic services
-	router := api.NewRouter(repo)
+	router := api.NewRouter(repo, dropRate)
 
 	// Initialize the networking listener daemon
 	server := api.NewUDPServer(port, router, dropRate)
