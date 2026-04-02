@@ -18,3 +18,8 @@ else()
     # GCC/Clang
     target_compile_options(client_app PRIVATE -Wall -Wextra)
 endif()
+
+# Windows Winsock library
+if(WIN32)
+    target_link_libraries(client_app PRIVATE ws2_32)
+endif()
